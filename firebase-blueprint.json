@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "HistoryItem": {
+      "title": "HistoryItem",
+      "description": "An entry representing a past AI cricket query and Gemini response",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who made the query"
+        },
+        "queryType": {
+          "type": "string",
+          "description": "The type of analysis, query, or chat"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The query prompt typed by the user"
+        },
+        "response": {
+          "type": "string",
+          "description": "The AI response from Gemini"
+        },
+        "createdAt": {
+          "type": "object",
+          "format": "date-time",
+          "description": "Timestamp of creation"
+        }
+      },
+      "required": [
+        "userId",
+        "queryType",
+        "prompt",
+        "response",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "history/{historyId}": {
+      "schema": "HistoryItem",
+      "description": "User specific history of cricket queries and generated insights"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default deny everything
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // History logs Match rules
+    match /history/{historyId} {
+      // Create is allowed only if authenticated, correctly structured, size-gated, and identity verification succeeds
+      allow create: if (
+        isSignedIn() && 
+        isValidId(historyId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().queryType is string &&
+        incoming().queryType.size() <= 50 &&
+        incoming().prompt is string &&
+        incoming().prompt.size() <= 5000 &&
+        incoming().response is string &&
+        incoming().response.size() <= 100000 &&
+        incoming().createdAt != null
+      );
+
+      // Read allows list queries only if user owns the queried documents
+      allow read: if (
+        isSignedIn() &&
+        resource.data.userId == request.auth.uid
+      );
+
+      // Deny modifications
+      allow update, delete: if false;
+    }
+  }
+}
